@@ -4,8 +4,10 @@ namespace XeroTechnicalTest.Domain.Models
 {
     public class InvoiceLine : BaseModel
     {
-        public string Description { get; set; }
+        public Product Product { get; set; }
+
+        public string Description => $"{Product.ProductName} @ {Product.Cost}";
+
         public int Quantity { get; set; }
-        public double Cost { get; set; }
     }
 }

@@ -7,37 +7,18 @@ namespace XeroTechnicalTest.Domain.Services.Invoice
 {
     public class InvoiceService : IInvoiceService
     {
-
-        public void AddInvoiceLine(Models.Invoice invoice, InvoiceLine line)
-        {
-            invoice.LineItems.Add(line);
-        }
-
-        public void AddInvoiceLines(Models.Invoice invoice, ICollection<InvoiceLine> lines)
-        {
-            invoice.LineItems.AddRange(lines);
-        }
-
         public void RemoveInvoiceLine(Models.Invoice invoice, Guid lineId)
         {
             var item = invoice.LineItems.SingleOrDefault(_ => _.Id == lineId);
             invoice.LineItems.Remove(item);
         }
 
-        /// <summary>
-        /// GetTotal should return the sum of (Cost * Quantity) for each line item
-        /// </summary>
-        public decimal GetTotal(Models.Invoice invoice)
+        public Models.Invoice CreateInvoice(List<InvoiceLine> lines)
         {
-            try
+            return new Models.Invoice
             {
-                return (decimal) invoice.LineItems.Sum(_ => _.Cost * _.Quantity);
-            }
-            catch (InvalidCastException ex)
-            {
-                // todo: add logging
-                throw;
-            }
+                LineItems = lines
+            };
         }
 
 

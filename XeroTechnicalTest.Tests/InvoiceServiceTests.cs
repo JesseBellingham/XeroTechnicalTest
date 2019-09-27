@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using XeroTechnicalTest.Domain.Constants;
 using XeroTechnicalTest.Domain.Models;
 using XeroTechnicalTest.Domain.Services.Invoice;
 using Xunit;
@@ -12,182 +13,189 @@ namespace XeroTechnicalTest.Tests
     {
         private readonly ITestOutputHelper _output;
         private readonly IInvoiceService _invoiceService;
+        
+        // in a proper application, these would be coming from some data store.
+        // mocking for tests
+        private readonly Product _apple = new Product
+        {
+            ProductName = "Apple",
+            ProductType = ProductType.Produce,
+            Cost = 1.43
+        };
 
-        public InvoiceServiceTests(
-            ITestOutputHelper output)
+        private readonly Product _orange = new Product
+        {
+            ProductName = "Orange",
+            ProductType = ProductType.Produce,
+            Cost = 2.12
+        };
+
+        private readonly Product _banana =
+        new Product
+        {
+            ProductName = "Banana",
+            ProductType = ProductType.Produce,
+            Cost = 1.89
+        };
+
+        private readonly Product _milk =
+        new Product
+        {
+            ProductName = "Milk",
+            ProductType = ProductType.Dairy,
+            Cost = 2.78
+        };
+
+        public InvoiceServiceTests(ITestOutputHelper output)
         {
             _output = output ?? throw new ArgumentNullException(nameof(output));
             _invoiceService = new InvoiceService();
         }
 
-
         [Fact]
-        public void CreateInvoiceWithOneItem()
+        public void InvoiceWithOneLineItemCalculatesCorrectTotal()
         {
-            var invoice = new Invoice();
-
-            _invoiceService.AddInvoiceLine(
-                invoice,
-                new InvoiceLine
+            var quantity = 1;
+            
+            var invoice = _invoiceService.CreateInvoice(
+                new List<InvoiceLine>
                 {
-//                InvoiceLineId = "1",
-                    Cost = 6.99,
-                    Quantity = 1,
-                    Description = "Apple"
+                    new InvoiceLine
+                    {
+                        Product = _apple,
+                        Quantity = quantity
+                    }
                 });
 
-            var total = _invoiceService.GetTotal(invoice);
-            Assert.True(total == 6.99m);
-            Console.WriteLine(total);
+            var expectedTotal = (decimal)_apple.Cost * quantity;
+            Assert.Equal(expectedTotal, invoice.Total);
         }
 
         [Fact]
         public void CreateInvoiceWithMultipleItemsAndQuantities()
         {
-            var invoice = new Invoice();
             var lines = new List<InvoiceLine>
             {
                 new InvoiceLine
                 {
-//                InvoiceLineId = 1,
-                    Cost = 10.21,
+                    Product = _apple,
                     Quantity = 4,
-                    Description = "Banana"
                 },
                 new InvoiceLine
                 {
-//                InvoiceLineId = 2,
-                    Cost = 5.21,
-                    Quantity = 1,
-                    Description = "Orange"
+                    Product = _milk,
+                    Quantity = 1
                 },
                 new InvoiceLine
                 {
-//                InvoiceLineId = 3,
-                    Cost = 5.21,
+                    Product = _orange,
                     Quantity = 5,
-                    Description = "Pineapple"
                 }
             };
 
-            _invoiceService.AddInvoiceLines(invoice, lines);
-
-            var total = _invoiceService.GetTotal(invoice);
-            Assert.True(total == 72.1m);
-            _output.WriteLine($"{total}");
+            var invoice = _invoiceService.CreateInvoice(lines);
+            var expectedTotal = (decimal) (_apple.Cost * 4 + _milk.Cost + _orange.Cost * 5);
+            Assert.Equal(expectedTotal,invoice.Total);
         }
 
-        [Fact]
-        public void RemoveItem()
+        [Theory]
+        [InlineData("57d6b1ad-e1f1-4e6d-a8de-86cec478ec06")]
+        [InlineData("02ae29d8-74eb-4970-b773-2b6860155a07")]
+        public void RemoveItemAtIndexRemovesCorrectItem(Guid id)
         {
-            var invoice = new Invoice();
+            // this is failing, I suspect because the inline data type is a string, rather than a guid
+            // I am unable to supply a guid, because it requires a compile time constant
             var lines = new List<InvoiceLine>
             {
                 new InvoiceLine
                 {
-//                InvoiceLineId = 1,
-                    Cost = 5.21,
+                    Id = Guid.Parse("57d6b1ad-e1f1-4e6d-a8de-86cec478ec06"),
                     Quantity = 1,
-                    Description = "Orange"
+                    Product = _orange
                 },
                 new InvoiceLine
                 {
-//                InvoiceLineId = 2,
-                    Cost = 10.99,
+                    Id = Guid.Parse("02ae29d8-74eb-4970-b773-2b6860155a07"),
                     Quantity = 4,
-                    Description = "Banana"
+                    Product = _banana
                 }
             };
             
-            _invoiceService.AddInvoiceLines(invoice, lines);
-            Assert.True(invoice.LineItems.Count == 2);
-
-            // because I changed ids to be automatically set in the constructor, I can no longer just say
-            // remove line with the id 1 or something
-            // todo: come back to this
-            var invoiceLineId = invoice.LineItems.FirstOrDefault()?.Id;
-            if (invoiceLineId == null)
-            {
-                Console.WriteLine("No invoice line item found to remove.");
-            }
-            else
-            {
-                _invoiceService.RemoveInvoiceLine(invoice, (Guid)invoiceLineId);
-            }
-            Assert.True(invoice.LineItems.Count == 1);
+            var invoice = _invoiceService.CreateInvoice(lines);
+            var lineToKeep = invoice.LineItems.SingleOrDefault(_ => _.Id != id);
+            Assert.Equal(2, invoice.LineItems.Count);
+            
+            _invoiceService.RemoveInvoiceLine(invoice, id);
+            Assert.Single(invoice.LineItems);
+            Assert.Contains(lineToKeep, invoice.LineItems);
         }
 
         [Fact]
         public void MergeInvoices()
         {
-            var invoice1 = new Invoice();
-            _invoiceService.AddInvoiceLine(
-                invoice1,
-                new InvoiceLine
+            var invoice1 = _invoiceService.CreateInvoice(
+                new List<InvoiceLine>
                 {
-//                InvoiceLineId = 1,
-                    Cost = 10.33,
-                    Quantity = 4,
-                    Description = "Banana"
+                    new InvoiceLine
+                    {
+                        Quantity = 4,
+                        Product = _banana
+                    }
                 });
 
-
-            var invoice2 = new Invoice();
-
-            _invoiceService.AddInvoiceLine(
-                invoice2,
+            var invoice2Lines = new List<InvoiceLine>
+            {
                 new InvoiceLine
                 {
-//                InvoiceLineId = 2,
-                    Cost = 5.22,
                     Quantity = 1,
-                    Description = "Orange"
-                });
-
-            _invoiceService.AddInvoiceLine(
-                invoice2,
+                    Product = _orange
+                },
                 new InvoiceLine
                 {
-//                InvoiceLineId = 3,
-                    Cost = 6.27,
                     Quantity = 3,
-                    Description = "Blueberries"
-                });
+                    Product = _milk
+                }
+            };
+            var invoice2 = _invoiceService.CreateInvoice(invoice2Lines);
+            var expectedTotal = (decimal)invoice1.LineItems.Sum(_ => _.Product.Cost * _.Quantity) +
+                                (decimal)invoice2.LineItems.Sum(_ => _.Product.Cost * _.Quantity);
 
             invoice1.MergeInvoices(invoice2);
 
-            var total = _invoiceService.GetTotal(invoice1);
-            Assert.True(total == 65.35m);
+            
+            Assert.Equal(expectedTotal, invoice1.Total);
         }
 
         [Fact]
-        public void CloneInvoice()
+        public void ClonedInvoiceCorrectlyDeepClonesTargetInvoice()
         {
-            var invoice = new Invoice();
-
-            _invoiceService.AddInvoiceLine(
-                invoice,
-                new InvoiceLine
+            var invoice = new Invoice
+            {
+                InvoiceDate = new DateTime(2019, 09, 27),
+                InvoiceNumber = 123,
+                LineItems = new List<InvoiceLine>
                 {
-//                InvoiceLineId = 1,
-                    Cost = 6.99,
-                    Quantity = 1,
-                    Description = "Apple"
-                });
-
-            _invoiceService.AddInvoiceLine(
-                invoice,
-                new InvoiceLine
-                {
-//                InvoiceLineId = 2,
-                    Cost = 6.27,
-                    Quantity = 3,
-                    Description = "Blueberries"
-                });
+                    new InvoiceLine
+                    {
+                        Quantity = 1,
+                        Product = _apple
+                    },
+                    new InvoiceLine
+                    {
+                        Quantity = 3,
+                        Product = _orange
+                    }
+                }
+            };
 
             var clonedInvoice = _invoiceService.Clone(invoice);
-            Assert.True(clonedInvoice.LineItems.Count == 2);
-            Assert.Contains(clonedInvoice.LineItems, _ => _.Description == "Blueberries" && _.Quantity == 3);
+            Assert.Equal(invoice.Id, clonedInvoice.Id);
+            Assert.Equal(invoice.LineItems.Count, clonedInvoice.LineItems.Count);
+            Assert.Equal(invoice.InvoiceDate, clonedInvoice.InvoiceDate);
+            Assert.Equal(invoice.InvoiceNumber, clonedInvoice.InvoiceNumber);
+            Assert.Contains(clonedInvoice.LineItems, _ =>
+                _.Product.ProductCode.Contains("orange", StringComparison.InvariantCultureIgnoreCase) &&
+                _.Quantity == 3);
         }
 
         [Fact]
@@ -197,14 +205,12 @@ namespace XeroTechnicalTest.Tests
             {
                 InvoiceDate = new DateTime(2019, 09, 27),
                 InvoiceNumber = 1000,
-                LineItems = new List<InvoiceLine>()
+                LineItems = new List<InvoiceLine>
                 {
                     new InvoiceLine
                     {
-//                        InvoiceLineId = 1,
-                        Cost = 6.99,
                         Quantity = 1,
-                        Description = "Apple"
+                        Product = _apple
                     }
                 }
             };

@@ -6,10 +6,8 @@ namespace XeroTechnicalTest.Domain.Services.Invoice
 {
     public interface IInvoiceService
     {
-        void AddInvoiceLine(Models.Invoice invoice, InvoiceLine line);
-        void AddInvoiceLines(Models.Invoice invoice, ICollection<InvoiceLine> lines);
         void RemoveInvoiceLine(Models.Invoice invoice, Guid lineId);
-        decimal GetTotal(Models.Invoice invoice);
+        Models.Invoice CreateInvoice(List<InvoiceLine> lines);
         Models.Invoice Clone(Models.Invoice invoice);
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace XeroTechnicalTest.Domain.Models
 {
@@ -9,6 +10,14 @@ namespace XeroTechnicalTest.Domain.Models
         public DateTime InvoiceDate { get; set; }
 
         public List<InvoiceLine> LineItems { get; set; } = new List<InvoiceLine>();
+
+        public decimal Total
+        {
+            get
+            {
+                return (decimal) LineItems.Sum(_ => _.Product.Cost * _.Quantity);
+            }
+        }
 
         /// <summary>
         /// Outputs string containing the following (replace [] with actual values):
