@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{42706752-2E97-434C-9C30-4A3C9D894972}"
+	ProjectSection(SolutionItems) = preProject
+		readme.txt = readme.txt
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XeroTechnicalTest.Domain", "XeroTechnicalTest.Domain\XeroTechnicalTest.Domain.csproj", "{837E7CD5-5F8F-4D38-879C-8ACBA850CE37}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XeroTechnicalTest.Runner", "XeroTechnicalTest.Runner\XeroTechnicalTest.Runner.csproj", "{B8EB2ACA-AAC0-4A74-B4B7-B9F8B8328B2E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XeroTechnicalTest.Tests", "XeroTechnicalTest.Tests\XeroTechnicalTest.Tests.csproj", "{DCC61B62-A64E-4432-8880-CCEBC28DC856}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{837E7CD5-5F8F-4D38-879C-8ACBA850CE37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{837E7CD5-5F8F-4D38-879C-8ACBA850CE37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{837E7CD5-5F8F-4D38-879C-8ACBA850CE37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{837E7CD5-5F8F-4D38-879C-8ACBA850CE37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8EB2ACA-AAC0-4A74-B4B7-B9F8B8328B2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8EB2ACA-AAC0-4A74-B4B7-B9F8B8328B2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8EB2ACA-AAC0-4A74-B4B7-B9F8B8328B2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8EB2ACA-AAC0-4A74-B4B7-B9F8B8328B2E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCC61B62-A64E-4432-8880-CCEBC28DC856}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCC61B62-A64E-4432-8880-CCEBC28DC856}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCC61B62-A64E-4432-8880-CCEBC28DC856}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCC61B62-A64E-4432-8880-CCEBC28DC856}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
