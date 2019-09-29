@@ -6,8 +6,9 @@ namespace XeroTechnicalTest.Domain.Models
     {
         public Product Product { get; set; }
 
-        public string Description => $"{Product.ProductName} @ {Product.Cost}";
+        public string Description => $"{Product.Name} @ {Product.CostInc}";
 
-        public int Quantity { get; set; }
+        // using long instead of int, just in case
+        public long Quantity { get; set; }
     }
 }

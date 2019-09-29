@@ -13,6 +13,10 @@ namespace XeroTechnicalTest.Runner
         private readonly IInvoiceService _invoiceService;
         private readonly IProductService _productService;
 
+        /// <summary>
+        /// I kept all the methods from the original Program.cs, although half of them seem more like things you'd have
+        /// as unit tests or something (which I've also done).
+        /// </summary>
         public Runner(
             IInvoiceService invoiceService,
             IProductService productService)
@@ -23,38 +27,37 @@ namespace XeroTechnicalTest.Runner
         
         public void CreateInvoiceWithOneItem()
         {
-            var apple = _productService.GetProductsOfType(ProductType.Produce)
-                .SingleOrDefault(
-                    _ => _.ProductCode.Contains("apple", StringComparison.InvariantCultureIgnoreCase));
+            var apple = _productService.Products()
+                .OfType<ProductProduce>()
+                .SingleOrDefault(_ => _.Code == Products.AppleProductCode);
             
-            var lines = new List<InvoiceLine>
+            var invoice = _invoiceService.CreateInvoice(new List<InvoiceLine>
             {
                 new InvoiceLine
                 {
                     Quantity = 1,
                     Product = apple
                 }
-            };
-            var invoice = _invoiceService.CreateInvoice(lines);
-
-            Console.WriteLine(invoice.Total);
+            });
+            Console.WriteLine(invoice.TotalString);
         }
 
         public void CreateInvoiceWithMultipleItemsAndQuantities()
         {
-            var banana = _productService.GetProductsOfType(ProductType.Produce)
-                .SingleOrDefault(
-                    _ => _.ProductCode.Contains("banana", StringComparison.InvariantCultureIgnoreCase));
+            // todo: logging/handling null products
+            var banana = _productService.Products()
+                .OfType<ProductProduce>()
+                .SingleOrDefault(_ => _.Code == Products.BananaProductCode);
             
-            var orange = _productService.GetProductsOfType(ProductType.Produce)
-                .SingleOrDefault(
-                    _ => _.ProductCode.Contains("orange", StringComparison.InvariantCultureIgnoreCase));
+            var orange = _productService.Products()
+                .OfType<ProductProduce>()
+                .SingleOrDefault(_ => _.Code == Products.OrangeProductCode);
             
-            var milk = _productService.GetProductsOfType(ProductType.Dairy)
-                .SingleOrDefault(
-                    _ => _.ProductCode.Contains("milk", StringComparison.InvariantCultureIgnoreCase));
+            var milk = _productService.Products()
+                .OfType<ProductDairy>()
+                .SingleOrDefault(_ => _.Code == Products.MilkProductCode);
             
-            var lines = new List<InvoiceLine>
+            var invoice = _invoiceService.CreateInvoice(new List<InvoiceLine>
             {
                 new InvoiceLine
                 {
@@ -71,21 +74,19 @@ namespace XeroTechnicalTest.Runner
                     Quantity = 5,
                     Product = milk
                 }
-            };
-            var invoice = _invoiceService.CreateInvoice(lines);
-
-            Console.WriteLine(invoice.Total);
+            });
+            Console.WriteLine(invoice.TotalString);
         }
 
         public void RemoveItem()
         {
-            var banana = _productService.GetProductsOfType(ProductType.Produce)
-                .SingleOrDefault(
-                    _ => _.ProductCode.Contains("banana", StringComparison.InvariantCultureIgnoreCase));
+            var banana = _productService.Products()
+                .OfType<ProductProduce>()
+                .SingleOrDefault(_ => _.Code == Products.BananaProductCode);
             
-            var orange = _productService.GetProductsOfType(ProductType.Produce)
-                .SingleOrDefault(
-                    _ => _.ProductCode.Contains("orange", StringComparison.InvariantCultureIgnoreCase));
+            var orange = _productService.Products()
+                .OfType<ProductProduce>()
+                .SingleOrDefault(_ => _.Code == Products.OrangeProductCode);
             
             var lines = new List<InvoiceLine>
             {
@@ -114,22 +115,22 @@ namespace XeroTechnicalTest.Runner
             {
                 _invoiceService.RemoveInvoiceLine(invoice, (Guid)invoiceLineId);
             }
-            Console.WriteLine(invoice.Total);
+            Console.WriteLine(invoice.TotalString);
         }
 
         public void MergeInvoices()
         {
-            var banana = _productService.GetProductsOfType(ProductType.Produce)
-                .SingleOrDefault(
-                    _ => _.ProductCode.Contains("banana", StringComparison.InvariantCultureIgnoreCase));
+            var banana = _productService.Products()
+                .OfType<ProductProduce>()
+                .SingleOrDefault(_ => _.Code == Products.BananaProductCode);
             
-            var orange = _productService.GetProductsOfType(ProductType.Produce)
-                .SingleOrDefault(
-                    _ => _.ProductCode.Contains("orange", StringComparison.InvariantCultureIgnoreCase));
+            var orange = _productService.Products()
+                .OfType<ProductProduce>()
+                .SingleOrDefault(_ => _.Code == Products.OrangeProductCode);
             
-            var milk = _productService.GetProductsOfType(ProductType.Dairy)
-                .SingleOrDefault(
-                    _ => _.ProductCode.Contains("milk", StringComparison.InvariantCultureIgnoreCase));
+            var milk = _productService.Products()
+                .OfType<ProductDairy>()
+                .SingleOrDefault(_ => _.Code == Products.MilkProductCode);
             
             var invoice1 = _invoiceService.CreateInvoice(new List<InvoiceLine>
             {
@@ -155,24 +156,20 @@ namespace XeroTechnicalTest.Runner
             });
 
             invoice1.MergeInvoices(invoice2);
-            Console.WriteLine(invoice1.Total);
+            Console.WriteLine(invoice1.TotalString);
         }
 
         public void CloneInvoice()
         {
-            var banana = _productService.GetProductsOfType(ProductType.Produce)
-                .SingleOrDefault(
-                    _ => _.ProductCode.Contains("banana", StringComparison.InvariantCultureIgnoreCase));
+            var banana = _productService.Products()
+                .OfType<ProductProduce>()
+                .SingleOrDefault(_ => _.Code == Products.BananaProductCode);
             
-            var orange = _productService.GetProductsOfType(ProductType.Produce)
-                .SingleOrDefault(
-                    _ => _.ProductCode.Contains("orange", StringComparison.InvariantCultureIgnoreCase));
+            var orange = _productService.Products()
+                .OfType<ProductProduce>()
+                .SingleOrDefault(_ => _.Code == Products.OrangeProductCode);
             
-            var milk = _productService.GetProductsOfType(ProductType.Dairy)
-                .SingleOrDefault(
-                    _ => _.ProductCode.Contains("milk", StringComparison.InvariantCultureIgnoreCase));
-            
-            var lines = new List<InvoiceLine>
+            var invoice = _invoiceService.CreateInvoice(new List<InvoiceLine>
             {
                 new InvoiceLine
                 {
@@ -184,24 +181,22 @@ namespace XeroTechnicalTest.Runner
                     Quantity = 3,
                     Product = orange
                 }
-            };
-            var invoice = _invoiceService.CreateInvoice(lines);
+            });
 
             var clonedInvoice = _invoiceService.Clone(invoice);
-            Console.WriteLine(clonedInvoice.Total);
+            Console.WriteLine(clonedInvoice.TotalString);
         }
 
-        public void InvoiceToString()
+        public void InvoiceAsFormattedString()
         {
-
-            var orange = _productService.GetProductsOfType(ProductType.Produce)
-                .SingleOrDefault(
-                    _ => _.ProductCode.Contains("orange", StringComparison.InvariantCultureIgnoreCase));
+            var orange = _productService.Products()
+                .OfType<ProductProduce>()
+                .SingleOrDefault(_ => _.Code == Products.OrangeProductCode);
 
             var invoice = new Invoice
             {
-                InvoiceDate = DateTime.Now,
-                InvoiceNumber = 1000,
+                InvoiceDate = DateTime.UtcNow,
+                Code = "I10001",
                 LineItems = new List<InvoiceLine>
                 {
                     new InvoiceLine

@@ -5,7 +5,6 @@ namespace XeroTechnicalTest.Domain.Services.Product
 {
     public interface IProductService
     {
-        IEnumerable<Models.Product> GetAllProducts();
-        IEnumerable<Models.Product> GetProductsOfType(ProductType productType);
+        IEnumerable<Models.Product> Products();
     }
 }

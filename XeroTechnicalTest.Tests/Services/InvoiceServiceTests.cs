@@ -1,74 +1,52 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
+using Moq;
 using XeroTechnicalTest.Domain.Constants;
 using XeroTechnicalTest.Domain.Models;
 using XeroTechnicalTest.Domain.Services.Invoice;
+using XeroTechnicalTest.Tests.Fixtures;
 using Xunit;
-using Xunit.Abstractions;
 
-namespace XeroTechnicalTest.Tests
+namespace XeroTechnicalTest.Tests.Services
 {
-    public class InvoiceServiceTests
+    /// <summary>
+    /// There may be merit in having more randomised data for quantities, I'm not sure.
+    /// The functionality we're testing in these particular tests don't seem to need it.
+    /// </summary>
+    public class InvoiceServiceTests : IClassFixture<ProductsFixture>
     {
-        private readonly ITestOutputHelper _output;
         private readonly IInvoiceService _invoiceService;
-        
-        // in a proper application, these would be coming from some data store.
-        // mocking for tests
-        private readonly Product _apple = new Product
-        {
-            ProductName = "Apple",
-            ProductType = ProductType.Produce,
-            Cost = 1.43
-        };
+        private readonly ProductsFixture _fixture;
 
-        private readonly Product _orange = new Product
-        {
-            ProductName = "Orange",
-            ProductType = ProductType.Produce,
-            Cost = 2.12
-        };
+        private const int AppleQuantity = 4;
+        private const int MilkQuantity = 1;
+        private const int OrangeQuantity = 5;
+        private const int BananaQuantity = 3;
 
-        private readonly Product _banana =
-        new Product
+        public InvoiceServiceTests(ProductsFixture fixture)
         {
-            ProductName = "Banana",
-            ProductType = ProductType.Produce,
-            Cost = 1.89
-        };
-
-        private readonly Product _milk =
-        new Product
-        {
-            ProductName = "Milk",
-            ProductType = ProductType.Dairy,
-            Cost = 2.78
-        };
-
-        public InvoiceServiceTests(ITestOutputHelper output)
-        {
-            _output = output ?? throw new ArgumentNullException(nameof(output));
-            _invoiceService = new InvoiceService();
+            var logger = Mock.Of<ILogger<InvoiceService>>();
+            _invoiceService = new InvoiceService(logger);
+            _fixture = fixture;
         }
 
         [Fact]
         public void InvoiceWithOneLineItemCalculatesCorrectTotal()
         {
-            var quantity = 1;
-            
             var invoice = _invoiceService.CreateInvoice(
                 new List<InvoiceLine>
                 {
                     new InvoiceLine
                     {
-                        Product = _apple,
-                        Quantity = quantity
+                        Product = _fixture.Apple,
+                        Quantity = AppleQuantity
                     }
                 });
 
-            var expectedTotal = (decimal)_apple.Cost * quantity;
-            Assert.Equal(expectedTotal, invoice.Total);
+            var expectedTotal = _fixture.Apple.CostInc * AppleQuantity;
+            Assert.Equal(expectedTotal, invoice.TotalInc);
         }
 
         [Fact]
@@ -78,24 +56,26 @@ namespace XeroTechnicalTest.Tests
             {
                 new InvoiceLine
                 {
-                    Product = _apple,
-                    Quantity = 4,
+                    Product = _fixture.Apple,
+                    Quantity = AppleQuantity,
                 },
                 new InvoiceLine
                 {
-                    Product = _milk,
-                    Quantity = 1
+                    Product = _fixture.Milk,
+                    Quantity = MilkQuantity
                 },
                 new InvoiceLine
                 {
-                    Product = _orange,
-                    Quantity = 5,
+                    Product = _fixture.Orange,
+                    Quantity = OrangeQuantity
                 }
             };
 
             var invoice = _invoiceService.CreateInvoice(lines);
-            var expectedTotal = (decimal) (_apple.Cost * 4 + _milk.Cost + _orange.Cost * 5);
-            Assert.Equal(expectedTotal,invoice.Total);
+            var expectedTotal = _fixture.Apple?.CostInc * AppleQuantity
+                                + _fixture.Milk?.CostInc * MilkQuantity
+                                + _fixture.Orange?.CostInc * OrangeQuantity;
+            Assert.Equal(expectedTotal,invoice.TotalInc);
         }
 
         [Theory]
@@ -103,21 +83,21 @@ namespace XeroTechnicalTest.Tests
         [InlineData("02ae29d8-74eb-4970-b773-2b6860155a07")]
         public void RemoveItemAtIndexRemovesCorrectItem(Guid id)
         {
-            // this is failing, I suspect because the inline data type is a string, rather than a guid
+            // this is failing, I suspect because the inline data type is a string, rather than a guid.
             // I am unable to supply a guid, because it requires a compile time constant
             var lines = new List<InvoiceLine>
             {
                 new InvoiceLine
                 {
                     Id = Guid.Parse("57d6b1ad-e1f1-4e6d-a8de-86cec478ec06"),
-                    Quantity = 1,
-                    Product = _orange
+                    Quantity = OrangeQuantity,
+                    Product = _fixture.Orange
                 },
                 new InvoiceLine
                 {
                     Id = Guid.Parse("02ae29d8-74eb-4970-b773-2b6860155a07"),
-                    Quantity = 4,
-                    Product = _banana
+                    Quantity = BananaQuantity,
+                    Product = _fixture.Banana
                 }
             };
             
@@ -138,8 +118,8 @@ namespace XeroTechnicalTest.Tests
                 {
                     new InvoiceLine
                     {
-                        Quantity = 4,
-                        Product = _banana
+                        Quantity = BananaQuantity,
+                        Product = _fixture.Banana
                     }
                 });
 
@@ -147,23 +127,22 @@ namespace XeroTechnicalTest.Tests
             {
                 new InvoiceLine
                 {
-                    Quantity = 1,
-                    Product = _orange
+                    Quantity = OrangeQuantity,
+                    Product = _fixture.Orange
                 },
                 new InvoiceLine
                 {
-                    Quantity = 3,
-                    Product = _milk
+                    Quantity = MilkQuantity,
+                    Product = _fixture.Milk
                 }
             };
             var invoice2 = _invoiceService.CreateInvoice(invoice2Lines);
-            var expectedTotal = (decimal)invoice1.LineItems.Sum(_ => _.Product.Cost * _.Quantity) +
-                                (decimal)invoice2.LineItems.Sum(_ => _.Product.Cost * _.Quantity);
+            var expectedTotal = invoice1.LineItems.Sum(_ => _.Product.CostInc * _.Quantity) +
+                                invoice2.LineItems.Sum(_ => _.Product.CostInc * _.Quantity);
 
             invoice1.MergeInvoices(invoice2);
 
-            
-            Assert.Equal(expectedTotal, invoice1.Total);
+            Assert.Equal(expectedTotal, invoice1.TotalInc);
         }
 
         [Fact]
@@ -172,18 +151,18 @@ namespace XeroTechnicalTest.Tests
             var invoice = new Invoice
             {
                 InvoiceDate = new DateTime(2019, 09, 27),
-                InvoiceNumber = 123,
+                Code = "I10001",
                 LineItems = new List<InvoiceLine>
                 {
                     new InvoiceLine
                     {
-                        Quantity = 1,
-                        Product = _apple
+                        Quantity = AppleQuantity,
+                        Product = _fixture.Apple
                     },
                     new InvoiceLine
                     {
-                        Quantity = 3,
-                        Product = _orange
+                        Quantity = OrangeQuantity,
+                        Product = _fixture.Orange
                     }
                 }
             };
@@ -192,30 +171,34 @@ namespace XeroTechnicalTest.Tests
             Assert.Equal(invoice.Id, clonedInvoice.Id);
             Assert.Equal(invoice.LineItems.Count, clonedInvoice.LineItems.Count);
             Assert.Equal(invoice.InvoiceDate, clonedInvoice.InvoiceDate);
-            Assert.Equal(invoice.InvoiceNumber, clonedInvoice.InvoiceNumber);
+            Assert.Equal(invoice.Code, clonedInvoice.Code);
             Assert.Contains(clonedInvoice.LineItems, _ =>
-                _.Product.ProductCode.Contains("orange", StringComparison.InvariantCultureIgnoreCase) &&
-                _.Quantity == 3);
+                _.Product.Code.Equals(Products.OrangeProductCode) &&
+                _.Quantity == OrangeQuantity);
+            Assert.Contains(clonedInvoice.LineItems, _ =>
+                _.Product.Code.Equals(Products.AppleProductCode) &&
+                _.Quantity == AppleQuantity);
         }
 
         [Fact]
-        public void InvoiceToString()
+        public void InvoiceToStringOutputsExpectedFormattedString()
         {
             var invoice = new Invoice
             {
                 InvoiceDate = new DateTime(2019, 09, 27),
-                InvoiceNumber = 1000,
+                Code = "I10000",
                 LineItems = new List<InvoiceLine>
                 {
                     new InvoiceLine
                     {
-                        Quantity = 1,
-                        Product = _apple
+                        Quantity = AppleQuantity,
+                        Product = _fixture.Apple
                     }
                 }
             };
 
-            Assert.Equal("Invoice Number: 1000, InvoiceDate: 27/09/2019, LineItemCount: 1", invoice.ToString());
+            Assert.Equal($"Invoice Number: {invoice.Code}, InvoiceDate: {invoice.InvoiceDate:dd/MM/yyyy}, LineItemCount: {invoice.LineItems.Count}",
+                invoice.ToString());
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿/*
-    Welcome to the Xero technical excercise!
+    Welcome to the Xero technical exercise!
     ---------------------------------------------------------------------------------
     The test consists of a small invoice application that has a number of issues.
 
@@ -33,17 +33,27 @@ namespace XeroTechnicalTest.Runner
         static void Main(string[] args)
         {
             Console.WriteLine("Welcome to Xero Tech Test!");
-            var runner = new Runner(new InvoiceService(), new ProductService());
+            
+            // added dependency injection
+            var services = ConfigureServices(new ServiceCollection());
+            var invoiceService = services.GetService<IInvoiceService>();
+            var productService = services.GetService<IProductService>();
+            
+            // separated the invoicing logic out into a runner class
+            // although the methods are basically copied from the test class
+            var runner = new Runner(invoiceService, productService);
+            
             runner.CreateInvoiceWithOneItem();
             runner.CreateInvoiceWithMultipleItemsAndQuantities();
             runner.RemoveItem();
             runner.MergeInvoices();
             runner.CloneInvoice();
-            runner.InvoiceToString();
+            runner.InvoiceAsFormattedString();
         }
 
-        public IServiceProvider ConfigureServices(IServiceCollection services)
+        public static IServiceProvider ConfigureServices(IServiceCollection services)
         {
+            services.AddLogging();
             services.AddTransient<IProductService, ProductService>();
             services.AddTransient<IInvoiceService, InvoiceService>();
             return services.BuildServiceProvider();
